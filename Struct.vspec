@@ -1,0 +1,47 @@
+Vehicle:
+    type: branch
+
+Vehicle.ADAS:
+    type: branch
+
+Vehicle.ADAS.Lidar:
+    type: branch
+
+
+Vehicle.ADAS.Lidar.ObstacleClass:
+    type: struct
+
+Vehicle.ADAS.Lidar.ObstacleClass.Class:
+    type: item
+    datatype: uint64
+
+
+Vehicle.ADAS.Lidar.Obstacle:
+    type: struct
+
+Vehicle.ADAS.Lidar.Obstacle.Id:
+    type: item
+    datatype: int64
+
+Vehicle.ADAS.Lidar.Obstacle.Probability:
+    type: item
+    datatype: float
+
+Vehicle.ADAS.Lidar.Obstacle.Class:
+    type: item
+    datatype: Vehicle.ADAS.Lidar.ObstacleClass.Class
+
+
+Vehicle.ADAS.Lidar.ObstacleList:
+    type: struct
+
+Vehicle.ADAS.Lidar.ObstacleList.Data:
+    type: item
+    datatype: Vehicle.ADAS.Lidar.Obstacle[]
+
+Vehicle.ADAS.Lidar.Front:
+    type: branch
+    
+Vehicle.ADAS.Lidar.Front.Obstacles:
+    type: sensor
+    datatype: Vehicle.ADAS.Lidar.ObstacleList

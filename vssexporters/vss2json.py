@@ -21,8 +21,11 @@ def export_node(json_dict, node, generate_uuid):
 
     json_dict[node.name] = {}
 
-    if node.type == VSSType.SENSOR or node.type == VSSType.ACTUATOR or node.type == VSSType.ATTRIBUTE:
-        json_dict[node.name]["datatype"] = str(node.data_type.value)
+    if node.type == VSSType.SENSOR or node.type == VSSType.ACTUATOR or node.type == VSSType.ATTRIBUTE or node.type == VSSType.ITEM:
+        if hasattr(node.data_type, 'value'):
+            json_dict[node.name]["datatype"] = str(node.data_type.value)
+        else:
+            json_dict[node.name]["datatype"] = node.data_type
 
     json_dict[node.name]["type"] = str(node.type.value)
 
@@ -60,7 +63,7 @@ def export_node(json_dict, node, generate_uuid):
     #    json_dict[node.name]["children"]={}
 
     # But old JSON code always generates children, so lets do so to
-    if node.type == VSSType.BRANCH:
+    if node.type == VSSType.BRANCH or node.type == VSSType.STRUCT:
         json_dict[node.name]["children"] = {}
 
     for child in node.children:

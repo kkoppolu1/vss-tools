@@ -79,6 +79,8 @@ class TestConstantsNode(unittest.TestCase):
         """
 
         self.assertEqual(VSSType.BRANCH, VSSType.from_str("branch"))
+        self.assertEqual(VSSType.STRUCT, VSSType.from_str("struct"))
+        self.assertEqual(VSSType.ITEM, VSSType.from_str("item"))
         self.assertEqual(VSSType.ATTRIBUTE, VSSType.from_str("attribute"))
         self.assertEqual(VSSType.SENSOR, VSSType.from_str("sensor"))
         self.assertEqual(VSSType.ACTUATOR, VSSType.from_str("actuator"))

@@ -46,7 +46,9 @@ element_map = {
     "attribute": "VSS_ATTRIBUTE",
     "branch": "VSS_BRANCH",
     "sensor": "VSS_SENSOR",
-    "actuator": "VSS_ACTUATOR"
+    "actuator": "VSS_ACTUATOR",
+    "struct": "VSS_STRUCT",
+    "item": "VSS_ITEM"
 }
 
 signal_count = 0

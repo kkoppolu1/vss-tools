@@ -27,6 +27,7 @@ import deprecation
 
 from .model.vsstree import VSSNode
 
+parent_node_types = frozenset(["struct", "branch"])
 
 class VSpecError(Exception):
     def __init__(self, *args, **kwargs):
@@ -201,11 +202,11 @@ def load_flat_model(file_name, prefix, include_paths):
 # 4, Check that allowed values are provided as arrays.
 #
 def cleanup_flat_entries(flat_model):
-    available_types = ["sensor", "actuator", "branch", "attribute", "UInt8", "Int8", "UInt16", "Int16",
+    available_types = ["struct", "item", "sensor", "actuator", "branch", "attribute", "UInt8", "Int8", "UInt16", "Int16",
                        "UInt32", "Int32", "UInt64", "Int64", "Boolean",
                        "Float", "Double", "String"]
 
-    available_downcase_types = ["sensor", "actuator", "branch", "attribute", "uint8", "int8", "uint16",
+    available_downcase_types = ["struct", "item", "sensor", "actuator", "branch", "attribute", "uint8", "int8", "uint16",
                                 "int16",
                                 "uint32", "int32", "uint64", "int64", "boolean",
                                 "float", "double", "string"]
@@ -247,7 +248,7 @@ def cleanup_deep_model(deep_model):
     if "$name$" in deep_model:
         del deep_model['$name$']
 
-    if (deep_model["type"] == "branch"):
+    if deep_model["type"] in parent_node_types:
         children = deep_model["children"]
         for child in deep_model["children"]:
             cleanup_deep_model(children[child])
@@ -452,9 +453,8 @@ def create_nested_model(flat_model, file_name):
 
     # Traverse the flat list of the parsed specification
     for elem in flat_model:
-        # Create children for branch type objects
-        if elem["type"] == "branch":
-            deep_model["type"] = "branch"
+        # Create children for branch type and struct type objects
+        if elem["type"] in parent_node_types:
             elem["children"] = {}
 
         # Create a list of path components to the given element
@@ -463,16 +463,20 @@ def create_nested_model(flat_model, file_name):
         name_list = elem['$name$'].split(".")
 
         # Extract prefix and name
-        prefix = list_to_path(name_list[:-1])
         name = name_list[-1]
 
-        # Locate the correct branch in the tree
-        parent_branch = find_branch(deep_model, name_list[:-1], 0)
-
+        # Locate the correct immediate parent node in the tree - either a branch or a struct
+        parent_node = find_parent_node(deep_model, name_list[:-1], 0)
+        if elem["type"] == "item" and parent_node["type"] != "struct":
+            raise VSpecError(deep_model.get("$file_name$", "??"),
+                             deep_model.get("$line$", "??"),
+                             "node of type item has a non-struct parent - {}. {}".format(parent_node["type"], name))
+            
+        
         # If an element with name is already in the parent branch
         # we update its fields with the fields from the new element
-        if name in parent_branch["children"]:
-            old_elem = parent_branch["children"][name]
+        if name in parent_node["children"]:
+            old_elem = parent_node["children"][name]
             # never update the type
             elem.pop("type", None)
             # concatenate file names
@@ -481,38 +485,38 @@ def create_nested_model(flat_model, file_name):
             old_elem.update(elem)
             old_elem["$file_name$"] = fname
         else:
-            parent_branch["children"][name] = elem
+            parent_node["children"][name] = elem
 
     return deep_model
 
 
-# Find the given prefix somewhere under the tree rooted in branch.
-def find_branch(branch, name_list, index):
+# Find the given prefix somewhere under the tree rooted in the tree.
+def find_parent_node(tree, name_list, index):
     # Have we reached the end of the name list
     if len(name_list) == index:
-        if (branch["type"] != "branch"):
-            raise VSpecError(branch.get("$file_name$", "??"),
-                             branch.get("$line$", "??"),
-                             "Not a branch: {}.".format(branch['$name$']))
+        if (tree["type"] not in parent_node_types):
+            raise VSpecError(tree.get("$file_name$", "??"),
+                             tree.get("$line$", "??"),
+                             "Not a branch or struct: {}.".format(tree['$name$']))
 
-        return branch
+        return tree
 
-    if (branch["type"] != "branch"):
-        raise VSpecError(branch.get("$file_name$", "??"),
-                         branch.get("$line$", "??"),
-                         "{} is not a branch.".format(list_to_path(name_list[:index])))
+    if (tree["type"] not in parent_node_types):
+        raise VSpecError(tree.get("$file_name$", "??"),
+                         tree.get("$line$", "??"),
+                         "{} is not a branch or struct.".format(list_to_path(name_list[:index])))
 
-    children = branch["children"]
+    children = tree["children"]
 
     if name_list[index] not in children:
-        raise VSpecError(branch.get("$file_name$", "??"),
-                         branch.get("$line$", "??"),
-                         "Missing branch: {} in {}.".format(name_list[index],
+        raise VSpecError(tree.get("$file_name$", "??"),
+                         tree.get("$line$", "??"),
+                         "Missing branch/struct: {0} in {1}.".format(name_list[index],
                                                             list_to_path(name_list)))
 
     # Traverse all children, looking for the
     # Move on to next element in prefix.
-    return find_branch(children[name_list[index]], name_list, index + 1)
+    return find_parent_node(children[name_list[index]], name_list, index + 1)
 
 
 def list_to_path(name_list):

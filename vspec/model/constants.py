@@ -152,6 +152,9 @@ class VSSType(Enum, metaclass=EnumMetaWithReverseLookup):
     ATTRIBUTE = "attribute"
     SENSOR = "sensor"
     ACTUATOR = "actuator"
+    STRUCT = "struct"
+    ITEM = "item"
+
 
 
 class VSSDataType(Enum, metaclass=EnumMetaWithReverseLookup):

@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package vehicle;
+
+message Vehicle {
+  VehicleADAS ADAS = 1;
+}
+
+message VehicleADAS {
+  VehicleADASLidar Lidar = 1;
+}
+
+message VehicleADASLidar {
+  VehicleADASLidarObstacleClass ObstacleClass = 1;
+  VehicleADASLidarObstacle Obstacle = 2;
+  VehicleADASLidarObstacleList ObstacleList = 3;
+  VehicleADASLidarFront Front = 4;
+}
+
+message VehicleADASLidarObstacleClass {
+  uint64 Class = 1;
+}
+
+message VehicleADASLidarObstacle {
+  int64 Id = 1;
+  float Probability = 2;
+  VehicleADASLidarObstacleClassClass Class = 3;
+}
+
+message VehicleADASLidarObstacleList {
+  repeated VehicleADASLidarObstacle Data = 1;
+}
+
+message VehicleADASLidarFront {
+  VehicleADASLidarObstacleList Obstacles = 1;
+}
+

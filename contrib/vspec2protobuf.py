@@ -31,7 +31,7 @@ mapped = {
 
 def traverse_tree(tree, proto_file):
     tree_node: VSSNode
-    for tree_node in filter(lambda n: n.is_branch(), PreOrderIter(tree)):
+    for tree_node in filter(lambda n: (n.is_branch() or n.is_struct()), PreOrderIter(tree)):
         proto_file.write(f"message {tree_node.qualified_name('')} {{" + "\n")
         print_message_body(tree_node.children, proto_file)
         proto_file.write("}\n\n")
@@ -40,9 +40,9 @@ def traverse_tree(tree, proto_file):
 def print_message_body(nodes, proto_file):
     for i, node in enumerate(nodes, 1):
         data_type = node.qualified_name("")
-        if not node.is_branch():
-            dt_val = node.data_type.value
-            data_type = mapped.get(dt_val.strip("[]"), dt_val.strip("[]"))
+        if not (node.is_branch() or node.is_struct()):
+            dt_val = str(node.data_type.value) if hasattr(node.data_type, 'value') else node.data_type
+            data_type = mapped.get(dt_val.strip("[]"), dt_val.strip("[]")).replace(".", "")
             data_type = ("repeated " if dt_val.endswith("[]") else "") + data_type
         proto_file.write(f"  {data_type} {node.name} = {i};" + "\n")
 

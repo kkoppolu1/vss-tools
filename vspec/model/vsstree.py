@@ -90,7 +90,20 @@ class VSSNode(Node):
             self.description = source_dict["description"]
 
         if "datatype" in source_dict.keys():
-            self.data_type = VSSDataType.from_str(source_dict["datatype"])
+            try:    
+                # A known primitive type
+                self.data_type = VSSDataType.from_str(source_dict["datatype"])
+            except:
+                # An unknown complex type. Search for the type definition within the tree.
+                root = self.root_node()
+                elem_name = f"/{source_dict['datatype']}"
+                candidate_name = elem_name.replace(".", "/").replace("[]", "")
+                # search for the data type definition in the tree
+                if VSSNode.node_exists(root, candidate_name):
+                    # found the data type. This is a valid data type to use.
+                    self.data_type = source_dict["datatype"]
+                else:
+                    raise RuntimeError(f"Unrecognized type: {source_dict['datatype']}")
 
         if "unit" in source_dict.keys():
             self.unit = Unit.from_str(source_dict["unit"])
@@ -139,7 +152,7 @@ class VSSNode(Node):
 
         """
         camel_regexp=p = re.compile('[A-Z][A-Za-z0-9]*$')
-        if self.type != VSSType.BRANCH and self.data_type==VSSDataType.BOOLEAN and not self.name.startswith("Is"):
+        if (self.type != VSSType.BRANCH and self.type != VSSType.STRUCT) and self.data_type==VSSDataType.BOOLEAN and not self.name.startswith("Is"):
             raise NameStyleValidationException(f'Boolean node "{self.name}" found in file "{sourcefile}" is not following naming conventions. It is recommended that boolean nodes start with "Is".')
         if not camel_regexp.match(self.name):
             raise NameStyleValidationException(f'Node "{self.name}" found in file "{sourcefile}" is not following naming conventions. It is recommended that node names use camel case, starting with a capital letter, only using letters A-z and numbers 0-9.')
@@ -223,8 +236,24 @@ class VSSNode(Node):
             name = "%s%s%s" % (node_name, separator, name)
         return name
 
+    def root_node(self):
+        """Return the root node. If no root exists, return self"""
+
+        root = self
+        
+        # go to the root of the tree
+        p = self.parent
+        while p is not None:
+            root = p
+            p = p.parent
+
+        return root
+
     def is_branch(self):
         return self.type == VSSType.BRANCH
+
+    def is_struct(self):
+        return self.type == VSSType.STRUCT
 
     def is_orphan(self) -> bool:
         """Checks if this instance is a branch without any child nodes
