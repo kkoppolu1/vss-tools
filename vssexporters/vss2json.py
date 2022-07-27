@@ -63,6 +63,11 @@ def export_node(json_dict, node, generate_uuid):
     if node.type == VSSType.BRANCH:
         json_dict[node.name]["children"] = {}
 
+    # add any other keys except special keys starting and ending with '$'
+    for k,v in node.source_dict.items():
+        if k not in json_dict[node.name] and (len(k) > 2 and not (k[0] == '$' and k[-1] == '$')):
+            json_dict[node.name][k] = v
+
     for child in node.children:
         export_node(json_dict[node.name]["children"], child, generate_uuid)
 

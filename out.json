@@ -1,0 +1,38 @@
+{
+  "Vehicle": {
+    "children": {
+      "ADAS": {
+        "children": {
+          "Lidar": {
+            "children": {
+              "Front": {
+                "children": {
+                  "Obstacles": {
+                    "datatype": "uint8[]",
+                    "datatypename": "ObstacleList",
+                    "description": null,
+                    "idl": "proto://Obstacles.proto",
+                    "type": "sensor",
+                    "uuid": "6ae7d48f9cd25ff694dc5ebd02f90522"
+                  }
+                },
+                "description": null,
+                "type": "branch",
+                "uuid": "f96d319c62615760861d8abe645081af"
+              }
+            },
+            "description": null,
+            "type": "branch",
+            "uuid": "aac706a4d4ca599c824ebc479c47540c"
+          }
+        },
+        "description": null,
+        "type": "branch",
+        "uuid": "14c2b2e1297b513197d320a5ce58f42e"
+      }
+    },
+    "description": null,
+    "type": "branch",
+    "uuid": "ccc825f94139544dbb5f4bfd033bece6"
+  }
+}
