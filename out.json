@@ -1,0 +1,70 @@
+{
+  "Vehicle": {
+    "children": {
+      "ADAS": {
+        "children": {
+          "Lidar": {
+            "children": {
+              "Front": {
+                "children": {
+                  "Obstacles": {
+                    "arraysize": 10,
+                    "children": {
+                      "Data": {
+                        "children": {
+                          "Id": {
+                            "datatype": "int64",
+                            "description": null,
+                            "type": "attribute",
+                            "uuid": "31f7ac1946da58a194c1c6a8dad9cf1d"
+                          },
+                          "ObstacleClass": {
+                            "children": {
+                              "Class": {
+                                "datatype": "uint64",
+                                "description": null,
+                                "type": "attribute",
+                                "uuid": "c30ce72db64057fd99ac502190bf5fcb"
+                              }
+                            },
+                            "description": null,
+                            "type": "branch",
+                            "uuid": "9ea15f3abd1656e096bcdc5ee6dcbba3"
+                          },
+                          "Probability": {
+                            "datatype": "float",
+                            "description": null,
+                            "type": "attribute",
+                            "uuid": "32e416f193d250d3a5f96f0f4789bee3"
+                          }
+                        },
+                        "description": null,
+                        "type": "branch",
+                        "uuid": "9646d03cc6845c42834aa74fc91a1cfa"
+                      }
+                    },
+                    "description": null,
+                    "type": "branch",
+                    "uuid": "6ae7d48f9cd25ff694dc5ebd02f90522"
+                  }
+                },
+                "description": null,
+                "type": "branch",
+                "uuid": "f96d319c62615760861d8abe645081af"
+              }
+            },
+            "description": null,
+            "type": "branch",
+            "uuid": "aac706a4d4ca599c824ebc479c47540c"
+          }
+        },
+        "description": null,
+        "type": "branch",
+        "uuid": "14c2b2e1297b513197d320a5ce58f42e"
+      }
+    },
+    "description": null,
+    "type": "branch",
+    "uuid": "ccc825f94139544dbb5f4bfd033bece6"
+  }
+}

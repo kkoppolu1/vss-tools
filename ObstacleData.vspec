@@ -1,0 +1,4 @@
+Data:
+    type: branch
+
+#include Obstacle.vspec Data

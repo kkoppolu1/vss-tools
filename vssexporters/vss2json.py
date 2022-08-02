@@ -37,6 +37,8 @@ def export_node(json_dict, node, generate_uuid):
         json_dict[node.name]["default"] = node.default_value
     if node.deprecation != "":
         json_dict[node.name]["deprecation"] = node.deprecation
+    if hasattr(node, 'arraysize'):
+        json_dict[node.name]["arraysize"] = node.arraysize
 
     # in case of unit or aggregate, the attribute will be missing
     try:

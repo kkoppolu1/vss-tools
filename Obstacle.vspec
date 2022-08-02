@@ -1,0 +1,11 @@
+Id:
+    type: attribute
+    datatype: int64
+
+Probability:
+    type: attribute
+    datatype: float
+
+ObstacleClass:
+    type: branch
+#include ObstacleClass.vspec ObstacleClass

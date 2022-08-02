@@ -113,6 +113,9 @@ class VSSNode(Node):
         if "instances" in source_dict.keys():
             self.instances = source_dict["instances"]
 
+        if "arraysize" in source_dict.keys():
+            self.arraysize = source_dict["arraysize"]
+
         if "deprecation" in source_dict.keys():
             self.deprecation = source_dict["deprecation"]
             

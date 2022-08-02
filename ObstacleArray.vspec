@@ -1,0 +1,17 @@
+Vehicle:
+    type: branch
+
+Vehicle.ADAS:
+    type: branch
+
+Vehicle.ADAS.Lidar:
+    type: branch
+
+Vehicle.ADAS.Lidar.Front:
+    type: branch
+
+Vehicle.ADAS.Lidar.Front.Obstacles:
+    type: branch
+    arraysize: 10
+
+#include ObstacleData.vspec Vehicle.ADAS.Lidar.Front.Obstacles
