@@ -11,23 +11,24 @@ import pytest
 import os
 
 
+# #################### Helper methods #############################
+
 @pytest.fixture
 def change_test_dir(request, monkeypatch):
     # To make sure we run from test directory
     monkeypatch.chdir(request.fspath.dirname)
 
-# Only running json exporter, overlay-functionality should be independent of selected exporter
 
-
-def test_expanded_overlay(change_test_dir):
-    test_str = "../../../vspec2json.py  -e my_id --json-pretty --no-uuid test.vspec -u ../test_units.yaml " + \
-               "-o overlay_1.vspec -o overlay_2.vspec out.json > out.txt"
+def test_datatype_error(change_test_dir):
+    test_str = "../../../vspec2json.py --json-pretty --no-uuid -u ../test_units.yaml test.vspec out.json > out.txt 2>&1"
     result = os.system(test_str)
     assert os.WIFEXITED(result)
-    assert os.WEXITSTATUS(result) == 0
+    # failure expected
+    assert os.WEXITSTATUS(result) != 0
 
-    test_str = "diff out.json expected.json"
+    test_str = 'grep \"Following types were referenced in signals but have not been defined\" out.txt > /dev/null'
     result = os.system(test_str)
+    os.system("cat out.txt")
     os.system("rm -f out.json out.txt")
     assert os.WIFEXITED(result)
     assert os.WEXITSTATUS(result) == 0

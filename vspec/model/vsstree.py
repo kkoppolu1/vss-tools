@@ -7,8 +7,8 @@
 # provisions of the license provided by the LICENSE file in this repository.
 #
 
-from anytree import Node, Resolver, ChildResolverError, RenderTree
-from .constants import VSSType, VSSDataType, Unit
+from anytree import Node, Resolver, ChildResolverError, RenderTree  # type: ignore[import]
+from .constants import VSSType, VSSDataType, Unit, VSSConstant
 from .exceptions import UnknownAttributeException, NameStyleValidationException, \
     ImpossibleMergeException, IncompleteElementException
 from typing import Any, Optional, Set, List
@@ -26,16 +26,16 @@ class VSSNode(Node):
 
     type: VSSType
     description = None
-    comment = ""
-    uuid = None
+    comment: str = ""
+    uuid: str = ""
     # data type - string representation. For struct names, this is the fully
     # qualified struct name.
-    data_type_str = None
+    data_type_str: str = ""
     # data type - enum representation if available
     datatype: Optional[VSSDataType]
 
     # The node types that the nodes can take
-    available_types: Set[str] = None
+    available_types: Set[str] = set()
 
     core_attributes = ["type", "children", "datatype", "description", "unit", "uuid", "min", "max", "allowed",
                        "instantiate", "aggregate", "default", "instances", "deprecation", "arraysize",
@@ -43,9 +43,9 @@ class VSSNode(Node):
 
     # List of accepted extended attributes. In strict terminate if an attribute is
     # neither in core or extended,
-    whitelisted_extended_attributes = []
+    whitelisted_extended_attributes: List[str] = []
 
-    unit: Optional[Unit]
+    unit: Optional[VSSConstant]
 
     min = ""
     max = ""
@@ -138,12 +138,20 @@ class VSSNode(Node):
 
         # Datatype and unit need special handling, so we extract them again
         if "datatype" in self.source_dict.keys():
-            self.data_type_str = self.source_dict["datatype"]
-            self.validate_and_set_datatype()
+            if not self.is_struct():
+                self.data_type_str = self.source_dict["datatype"]
+                self.validate_and_set_datatype()
+            else:
+                logging.warning(f"Data type specified for struct node: {self.name}. Ignoring it")
 
         # Units are applicable only for primitives. Not user defined types.
         if "unit" in self.source_dict.keys() and self.has_datatype():
-            self.unit = Unit.from_str(self.source_dict["unit"])
+            unit = self.source_dict["unit"]
+            try:
+                self.unit = Unit.from_str(unit)
+            except KeyError:
+                logging.error(f"Unknown unit {unit} for signal {self.qualified_name()}. Terminating.")
+                sys.exit(-1)
 
         if self.has_instances() and not self.is_branch():
             logging.error(
@@ -221,7 +229,7 @@ class VSSNode(Node):
             return self.is_leaf
         return False
 
-    def get_struct_qualified_name(self, struct_name) -> str:
+    def get_struct_qualified_name(self, struct_name) -> Optional[str]:
         """
         Returns whether a struct node with the given relative name is defined under the branch of this node.
         A relative name is the fully qualified name of the struct without the branch prefix under which it is defined.
@@ -251,6 +259,9 @@ class VSSNode(Node):
             root = path
 
         # find the struct node under the branch
+        if root is None:
+            return None
+
         for child in root.children:
             if child.is_struct() and child.name == struct_name:
                 return child.qualified_name()
@@ -273,6 +284,15 @@ class VSSNode(Node):
         """
         return hasattr(self, "unit") and self.unit is not None
 
+    def get_unit(self) -> str:
+        """Returns:
+                The name of the unit or empty string if no unit
+        """
+        if hasattr(self, "unit") and self.unit is not None:
+            return self.unit.value
+        else:
+            return ''
+
     def has_datatype(self) -> bool:
         """Check if this instance has a datatype
 
@@ -280,6 +300,15 @@ class VSSNode(Node):
                 True if this instance has a data type, False otherwise
         """
         return hasattr(self, "datatype") and self.datatype is not None
+
+    def get_datatype(self) -> str:
+        """Returns:
+                The name of the dataype or empty string if no datatype
+        """
+        if hasattr(self, "datatype") and self.datatype is not None:
+            return self.datatype.value
+        else:
+            return ''
 
     def has_instances(self) -> bool:
         """Check if this instance has a VSS instances

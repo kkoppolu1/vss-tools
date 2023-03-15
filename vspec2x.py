@@ -14,7 +14,6 @@
 from enum import Enum
 from vspec.model.vsstree import VSSNode
 from vspec.model.constants import VSSTreeType
-from vspec.model.constants import Unit
 from vspec.loggingconfig import initLogging
 import argparse
 import logging
@@ -61,15 +60,19 @@ def main(arguments):
     parser.add_argument('-I', '--include-dir', action='append', metavar='dir', type=str, default=[],
                         help='Add include directory to search for included vspec files.')
     parser.add_argument('-e', '--extended-attributes', type=str, default="",
-                        help='Whitelisted extended attributes as comma separated list. Note, that not all exporters will support (all) extended attributes.')
+                        help='Whitelisted extended attributes as comma separated list. '
+                             'Note, that not all exporters will support (all) extended attributes.')
     parser.add_argument('-s', '--strict', action='store_true',
-                        help='Use strict checking: Terminate when anything not covered or not recommended by VSS language or extensions is found.')
+                        help='Use strict checking: Terminate when anything not covered or not recommended '
+                             'by VSS language or extensions is found.')
     parser.add_argument('--abort-on-unknown-attribute', action='store_true',
                         help=" Terminate when an unknown attribute is found.")
     parser.add_argument('--abort-on-name-style', action='store_true',
                         help=" Terminate naming style not follows recommendations.")
     parser.add_argument('--format', metavar='format', type=Exporter.from_string, choices=list(Exporter),
-                        help='Output format, choose one from ' + str(Exporter._member_names_) + ". If omitted we try to guess form output_file suffix.")
+                        help='Output format, choose one from ' +
+                             str(Exporter._member_names_) +  # pylint: disable=no-member
+                             ". If omitted we try to guess form output_file suffix.")
     parser.add_argument('--uuid', action='store_true',
                         help='Include uuid in generated files. This is currently the default behavior.')
     parser.add_argument('--no-uuid', action='store_true',
@@ -147,14 +150,7 @@ def main(arguments):
     if args.no_uuid:
         print_uuid = False
 
-    if not args.unit_file:
-        logging.warning(
-            "Use of default VSS unit file is deprecated, please specify the unit file you want to use with the -u argument!")
-        Unit.load_default_config_file()
-    else:
-        for unit_file in args.unit_file:
-            logging.info("Reading unit definitions from " + str(unit_file))
-            Unit.load_config_file(unit_file)
+    vspec.load_units(args.vspec_file, args.unit_file)
 
     # process data type tree
     data_type_tree = None
@@ -165,12 +161,16 @@ def main(arguments):
     try:
         logging.info(f"Loading vspec from {args.vspec_file}...")
         tree = vspec.load_tree(
-            args.vspec_file, include_dirs, VSSTreeType.SIGNAL_TREE, break_on_unknown_attribute=abort_on_unknown_attribute, break_on_name_style_violation=abort_on_namestyle, expand_inst=False, data_type_tree=data_type_tree)
+            args.vspec_file, include_dirs, VSSTreeType.SIGNAL_TREE,
+            break_on_unknown_attribute=abort_on_unknown_attribute, break_on_name_style_violation=abort_on_namestyle,
+            expand_inst=False, data_type_tree=data_type_tree)
 
         for overlay in args.overlays:
             logging.info(f"Applying VSS overlay from {overlay}...")
-            othertree = vspec.load_tree(overlay, include_dirs, VSSTreeType.SIGNAL_TREE, break_on_unknown_attribute=abort_on_unknown_attribute,
-                                        break_on_name_style_violation=abort_on_namestyle, expand_inst=False, data_type_tree=data_type_tree)
+            othertree = vspec.load_tree(overlay, include_dirs, VSSTreeType.SIGNAL_TREE,
+                                        break_on_unknown_attribute=abort_on_unknown_attribute,
+                                        break_on_name_style_violation=abort_on_namestyle, expand_inst=False,
+                                        data_type_tree=data_type_tree)
             vspec.merge_tree(tree, othertree)
 
         vspec.expand_tree_instances(tree)
@@ -192,7 +192,8 @@ def main(arguments):
 def processDataTypeTree(parser: argparse.ArgumentParser, args, include_dirs,
                         abort_on_unknown_attribute: bool, abort_on_namestyle: bool) -> VSSNode:
     """
-    Helper function to process command line arguments and invoke logic for processing data type information provided in vspec format
+    Helper function to process command line arguments and invoke logic for processing data
+    type information provided in vspec format
     """
     # check that both required arguments are available to process the data
     # type tree
@@ -201,7 +202,8 @@ def processDataTypeTree(parser: argparse.ArgumentParser, args, include_dirs,
             "Please provide the vspec data types file and the output file")
 
     logging.warning(
-        "vspec struct/type support is an experimental feature. Not all features in the tool chain are supported. Proceed with caution")
+        "vspec struct/type support is an experimental feature. Not all features in the tool chain are supported."
+        "Proceed with caution")
     if len(args.overlays) > 0:
         parser.error(
             "Overlays are not yet supported in vspec struct/data type support feature")
@@ -212,7 +214,8 @@ def processDataTypeTree(parser: argparse.ArgumentParser, args, include_dirs,
     logging.info(
         f"Loading and processing struct/data type tree from {args.vspec_types_file}")
     return vspec.load_tree(args.vspec_types_file, include_dirs, VSSTreeType.DATA_TYPE_TREE,
-                           break_on_unknown_attribute=abort_on_unknown_attribute, break_on_name_style_violation=abort_on_namestyle, expand_inst=False)
+                           break_on_unknown_attribute=abort_on_unknown_attribute,
+                           break_on_name_style_violation=abort_on_namestyle, expand_inst=False)
 
 
 if __name__ == "__main__":
