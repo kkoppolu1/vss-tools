@@ -362,12 +362,12 @@ class VSSNode(Node):
                         logging.error(
                             f"Data type not found. Data Type: {undecorated_datatype_str}")
                         sys.exit(-1)
+
+                    # replace data type with qualified name
+                    if is_array:
+                        self.data_type_str = struct_fqn + ARRAY_SUBSCRIPT_OP
                     else:
-                        # replace data type with qualified name
-                        if is_array:
-                            self.data_type_str = struct_fqn + ARRAY_SUBSCRIPT_OP
-                        else:
-                            self.data_type_str = struct_fqn
+                        self.data_type_str = struct_fqn
             elif self.is_signal():
                 # This is a signal possibly referencing a user-defined type.
                 # Just assign the string value for now. Validation will be
@@ -437,8 +437,8 @@ class VSSNode(Node):
             unknown_found = True
 
         if "default" in self.source_dict.keys():
-            if self.source_dict["type"] != "attribute" and self.source_dict["type"] != "property":
-                logging.warning("Invalid VSS element %s, only attributes/properties can use default", self.name)
+            if self.source_dict["type"] not in {"attribute", "property", "sensor", "actuator"}:
+                logging.warning("Invalid VSS element %s, %s cannot use default", self.name, self.source_dict["type"])
                 unknown_found = True
 
         if unknown_found and abort_on_unknown_attribute:
