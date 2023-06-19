@@ -65,15 +65,40 @@ jobs:
           cd ${{ env.VSS_TOOLS_PATH }}
           pipenv install mypy types-setuptools types-PyYAML
           pipenv run mypy *.py vspec tests contrib
-      - name: Run flake8, for now always succeed.
+      - name: Run flake8, errors not accepted!.
         run: |
           cd ${{ env.VSS_TOOLS_PATH }}
           pipenv install flake8
-          pipenv run flake8 *.py vspec tests contrib ||
-            echo "::warning title=flake8::Errors reported"
+          pipenv run flake8 *.py vspec tests contrib
       - name: Test Binary Go Parser
         run: |
           # As of now run here, not included in Makefile
           cd ${{ env.VSS_TOOLS_PATH }}/binary/go_parser
           go build -o gotestparser testparser.go
           go list -m -json -buildvcs=false all
+
+  pypitest:
+    name: Test PyPI packaging
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout vss-tools
+        uses: actions/checkout@v3
+      - name: Test Pypi packaging
+        run: |
+          # Separate build as we want a clean environment to make sure all dependencies are present
+          python -m pip --quiet --no-input install --upgrade pip
+          pip install -e .
+      - name: Test that tools can be started
+        run: |
+          # Verify that it works from any directory
+          mkdir /tmp/pypi_vss_test
+          cd /tmp/pypi_vss_test
+          # Just verify that we can start the tools
+          vspec2x.py --help
+          vspec2csv.py --help
+          vspec2json.py --help
+          vspec2yaml.py --help
+          vspec2franca.py --help
+          vspec2ddsidl.py --help
+          vspec2protobuf.py --help
+          vspec2graphql.py --help

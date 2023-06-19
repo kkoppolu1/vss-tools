@@ -106,12 +106,18 @@ def load_tree(
         break_on_name_style_violation=break_on_name_style_violation)
     if expand_inst:
         expand_tree_instances(tree)
+    return tree
 
+
+def check_type_usage(tree: VSSNode, tree_type: VSSTreeType, type_tree: Optional[VSSNode] = None):
+    """
+    Check usages of types within the tree.
+    This methods shall be called after overlays (or additional type files) have been merged.
+    """
     if tree_type == VSSTreeType.DATA_TYPE_TREE:
         check_data_type_references(tree)
     elif tree_type == VSSTreeType.SIGNAL_TREE:
-        check_data_type_references_across_trees(tree, data_type_tree)
-    return tree
+        check_data_type_references_across_trees(tree, type_tree)
 
 
 def load_flat_model(file_name, prefix, include_paths, tree_type: VSSTreeType):
@@ -769,6 +775,10 @@ def render_tree(
 
     root_element_name = next(iter(tree_dict.keys()))
     root_element = tree_dict[root_element_name]
+    if root_element['type'] != 'branch':
+        raise Exception(
+            f"Invalid VSS model, root must be branch, found {root_element_name} of type {root_element['type']}")
+
     tree_root = VSSNode(
         root_element_name,
         root_element,
@@ -931,7 +941,7 @@ def check_data_type_references_across_trees(
         if node.is_signal() and node.datatype is None:
             if data_type_root is None or (not node.does_attribute_exist(
                     data_type_root,
-                    lambda n: n.data_type_str,
+                    lambda n: n.base_data_type_str(),
                     lambda n: n.qualified_name(),
                     lambda n: n.is_struct())):
                 nonexistant_types.append(f'{node.data_type_str}')

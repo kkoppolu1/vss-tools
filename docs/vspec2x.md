@@ -74,11 +74,13 @@ COVESA supports a number of pre-defined types, see [VSS documentation](https://c
 In addition to this COVESA is introducing a concept to support user-defined types.
 This is currently limited to specifying struct-types. For more information on syntax see VSS documentation.
 
-*Note: Struct support is  currently an experimental feature with limited support in exporters, currently only supported by JSON exporter!*
+*Note: Struct support is not yet supported by all exporters, currently supported by JSON; CSV, Yaml and Protobuf exporters!*
 
 To use user-defined types the types must be put in a separate file and given to the tool with the `-vt` argument.
 When a signal is defined the tooling will check if the `datatype` specified is either a predefined type or
 a user-defined type. If no matching type is found an error will be given.
+It is possible to use `-vt <file>` multiple times. Any additional files after the first one is then treated similar
+to overlay files, i.e. they are merged into previous file and it is if needed possible to redefine already defined types.
 
 Depending on exporter, type definitions may either be transformed to a separate file with structure similar to the
 "normal" output file, or integrated into the "normal" output file. If type output is given to a separate file then
@@ -93,8 +95,8 @@ python vspec2json.py --no-uuid --json-pretty -vt VehicleDataTypes.vspec -ot Vehi
 
 Current status for exportes:
 
-* CSV, JSON, YAML: Supported as experimental feature, `-ot` argument must be given
-* All other exporters: Not supported
+* CSV, JSON, YAML, Protobuf: Supported!
+* All other exporters: Not supported!
 
 The export format is similar to the export format of VSS signals. The below table illustrates the exporting of the new nodes introduced in the data type tree:
 
@@ -145,12 +147,7 @@ The YAML exporter maintains the file structure of the vspec file being exported.
 
 The tooling verifies that only pre-defined units are used, like `kPa`and `percent`.
 
-COVESA maintains a unit file for the standard VSS catalog. It currently exists in two locations:
-
-* [vss-tools](../vspec/config.yaml)
-* [vss](https://github.com/COVESA/vehicle_signal_specification/blob/master/spec/units.yaml)
-
-The file in [vss-tools](../vspec/config.yaml) is planned to be removed when VSS 4.0 is released.
+COVESA maintains a [unit file](https://github.com/COVESA/vehicle_signal_specification/blob/master/spec/units.yaml) for the standard VSS catalog.
 
 It is possible to specify your own unit file(s) by the `-u <file>` parameter.
 `-u` can be used multiple times to specify additional files like in the example below:
@@ -163,7 +160,6 @@ When deciding which units to use the tooling use the following logic:
 
 * If `-u <file>` is used then the specified unit files will be used. Default units will not be considered.
 * If `-u` is not used the tool will check for a unit file in the same directory as the root `*.vspec` file.
-* If not found the file in [vss-tools](../vspec/config.yaml) will be used. This alternative will be removed in VSS 4.0
 
 See the [FAQ](../FAQ.md) for more information on how to define own units.
 
@@ -278,7 +274,7 @@ Add additional fields to the nodes in the graphql schema. use: <field_name> <des
 
 
 ## Writing your own exporter
-This is easy. Put the code in file in the [vssexporters directory](../vssexporters/).
+This is easy. Put the code in file in the [vssexporters directory](../vspec/vssexporters/).
 
 Mandatory functions to be implemented are
 ```python
