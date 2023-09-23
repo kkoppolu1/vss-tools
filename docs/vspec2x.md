@@ -12,14 +12,14 @@ The supported arguments might look like this
 
  ```
 usage: vspec2x.py [-h] [-I dir] [-e EXTENDED_ATTRIBUTES] [-s] [--abort-on-unknown-attribute] [--abort-on-name-style]
-                  [--format format] [--uuid] [--no-uuid] [-o overlays] [-u unit_file]
+                  [--format format] [--uuid] [--no-uuid] [--no_expand] [-o overlays] [-u unit_file]
                   [-vt vspec_types_file] [-ot <types_output_file>]
                   [--json-all-extended-attributes] [--json-pretty]
                   [--yaml-all-extended-attributes] [-v version] [--all-idl-features] [--gqlfield GQLFIELD GQLFIELD]
                   <vspec_file> <output_file>
 ```
 
-A common commandline to convert the VSS standard catalog into a JSON file is
+An example command line to convert the VSS standard catalog into a JSON file is
 
 ```
 % python vspec2x.py --format json  -I ../spec -u ../spec/units.yaml ../spec/VehicleSignalSpecification.vspec vss.json
@@ -68,6 +68,12 @@ This is currently the default behavior. From VSS 4.0 `--no-uuid` will be the def
 Request the exporter to not output uuids.
 From VSS 4.0 this will be the default behavior and then this parameter will be deprecated.
 
+### --no-expand
+
+By default all tools expand instance information so that instance information like "Row1" become a branch just like
+any other branch. If this argument is used and the exporter supports it no expansion will take place.
+Instead instance information will be kept as additional information for the branch.
+
 ## Handling of Data Types
 
 COVESA supports a number of pre-defined types, see [VSS documentation](https://covesa.github.io/vehicle_signal_specification/rule_set/data_entry/data_types/).
@@ -107,6 +113,8 @@ The export format is similar to the export format of VSS signals. The below tabl
 
 The YAML exporter maintains the file structure of the vspec file being exported.
 
+**NOTE:** For YAML and JSON, if a separate output file is not provided, the complex data types are exported under the key - `ComplexDataTypes`. See the snippets below for illustration.
+
 **CSV snippet**
 ```csv
 "Node","Type","DataType","Deprecated","Unit","Min","Max","Desc","Comment","Allowed","Default"
@@ -115,7 +123,7 @@ The YAML exporter maintains the file structure of the vspec file being exported.
 "<PropertyName>","property","<DataType>","<Deprecation>","<Unit>","<Min>","<Max>","<Description>","<Comment>","<Allowed values>","<Default Value>"
 ```
 
-**JSON snippet**
+**JSON snippet (data types are exported to a separate file)**
 ```json
 {
   "VehicleDataTypes": {
@@ -137,6 +145,41 @@ The YAML exporter maintains the file structure of the vspec file being exported.
         }
         "description": "<Description>",
         "type": "branch"
+      }
+    }
+  }
+}
+```
+
+**JSON snippet (signals and data types are exported to a single file)**
+```json
+{
+  "Vehicle": {
+    "type": "branch"
+    // Signal tree
+  },
+  "ComplexDataTypes": {
+    "VehicleDataTypes": {
+      // complex data type tree
+      "children": {
+        "<Branch>": {
+          "children": {
+            "<Struct>": {
+              "children": {
+                "<Property>": {
+                  "type": "property",
+                  "datatype": "<Data Type>",
+                  "description": "<Description",
+                  //                  ...
+                }
+              },
+              "description": "<Description>",
+              "type": "struct"
+            }
+          }
+          "description": "<Description>",
+          "type": "branch"
+        }
       }
     }
   }
@@ -201,6 +244,10 @@ Even if a row not existing in standard instantiation is used (like `Row5`) the t
 signal and not expand it further. If using an overlay to redefine a specific signal then data specified in overlays for extended signals
 (like `Vehicle.Cabin.Door.Row1.Left.IsChildLockActive`) has precedence over data specified for not yet extended signals
 (like `Vehicle.Cabin.Door.IsChildLockActive`).
+
+*Note: If using `--no-expand` together with overlays for specific instances then the result will be a combination*
+*of expanded and unexpanded paths. For the example above `Vehicle.Cabin.Door.Row1.Left.NewSignal` will be expanded*
+*but all other signals in `Vehicle.Cabin.Door` will remain unexpanded!*
 
 It is possible to use `-o` multiple times, e.g.
 
